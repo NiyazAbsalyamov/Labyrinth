@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace Labyrinth
 {
-    public partial class Form1 : Form
+    public partial class ConnectView : Form
     {
-        public Form1()
+        public ConnectView()
         {
             InitializeComponent();
         }

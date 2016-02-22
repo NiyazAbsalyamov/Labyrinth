@@ -1,6 +1,6 @@
 ﻿namespace Labyrinth
 {
-    partial class Form1
+    partial class ConnectView
     {
         /// <summary>
         /// Required designer variable.
