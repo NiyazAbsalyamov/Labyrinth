@@ -1,0 +1,9 @@
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.csprojResolveAssemblyReference.cache
+D:\Repos\Labyrinth\Labyrinth\bin\Debug\Labyrinth.exe
+D:\Repos\Labyrinth\Labyrinth\bin\Debug\Labyrinth.pdb
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.Properties.Resources.resources
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.ConnectView.resources
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.csproj.GenerateResource.Cache
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.exe
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.pdb
+D:\Repos\Labyrinth\Labyrinth\obj\Debug\Labyrinth.View.GameView.resources

@@ -5,45 +5,79 @@ using System.Text;
 using System.Threading;
 
 namespace Labyrinth.Services
-{    
-    public class NetworkServices
+{
+    public class NetworkService
     {
-        private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
-        private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
-        private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
+        public ManualResetEvent ConnectDone = new ManualResetEvent(false);
+        public ManualResetEvent SendDone = new ManualResetEvent(false);
+        public ManualResetEvent ReceiveDone = new ManualResetEvent(false);
 
-        private static string _responce = string.Empty;
+        public StringBuilder Responce;
 
-        public static void StartClient()
+        public bool IsBroken;
+
+        private Socket _client;
+
+        public void StartClientTest()
         {
             try
             {
                 var ipAddress = IPAddress.Parse("127.0.0.1");
                 var remoteEp = new IPEndPoint(ipAddress, 1000);
 
-                var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                client.BeginConnect(remoteEp, ConnectCallBack, client);
+                _client.BeginConnect(remoteEp, ConnectCallBack, _client);
                 ConnectDone.WaitOne();
 
-                Send(client, "This is a test<EOF>");
+                Send("This is a test<EOF>");
                 SendDone.WaitOne();
 
-                Receive(client);
+                Receive();
                 ReceiveDone.WaitOne();
 
-                Console.WriteLine(@"Response received : {0}", _responce);
+                Console.WriteLine(@"Response received : {0}", Responce);
 
-                client.Shutdown(SocketShutdown.Both);
-                client.Close();
+                _client.Shutdown(SocketShutdown.Both);
+                _client.Close();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                //Console.WriteLine(e.ToString());
             }
         }
 
-        private static void ConnectCallBack(IAsyncResult ar)
+        public void OpenConnection(string ipAddress, string port)
+        {
+            try
+            {
+                var remoteEp = new IPEndPoint(IPAddress.Parse(ipAddress), Int32.Parse(port));
+
+                _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                _client.BeginConnect(remoteEp, ConnectCallBack, _client);
+                ConnectDone.WaitOne();
+            }
+            catch (Exception e)
+            {
+                ExceptionLogger.ExceptionLogger.AddException(e.Message);
+            }
+        }
+
+        public void CloseConnection()
+        {
+            try
+            {
+                _client.Shutdown(SocketShutdown.Both);
+                _client.Close();
+            }
+            catch (Exception e)
+            {
+                ExceptionLogger.ExceptionLogger.AddException(e.Message);
+            }
+        }
+
+        public void ConnectCallBack(IAsyncResult ar)
         {
             try
             {
@@ -55,37 +89,43 @@ namespace Labyrinth.Services
             }
             catch (Exception e)
             {
-
-                Console.WriteLine(e.ToString());
+                ExceptionLogger.ExceptionLogger.AddException(e.Message);
             }
         }
-        private static void Receive(Socket client)
+        public void Receive()
         {
             try
             {
-                var state = new StateObject { WorkSocket = client };
+                var state = new StateObject { WorkSocket = _client };
 
-                client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
+                _client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
                     ReceiveCallback, state);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                ExceptionLogger.ExceptionLogger.AddException(e.Message);
             }
         }
 
-        private static void ReceiveCallback(IAsyncResult ar)
+        private void ReceiveCallback(IAsyncResult ar)
         {
             try
             {
-                StateObject state = (StateObject)ar.AsyncState;
-                Socket client = state.WorkSocket;
+                var state = (StateObject)ar.AsyncState;
+                var client = state.WorkSocket;
 
-                int bytesRead = client.EndReceive(ar);
+                var bytesRead = client.EndReceive(ar);
 
                 if (bytesRead > 0)
                 {
-                    state.Sb.Append(Encoding.Unicode.GetString(state.Buffer, 0, bytesRead));
+                    var str = Encoding.Unicode.GetString(state.Buffer, 0, bytesRead);
+
+                    state.Sb.Append(str);
+
+                    lock (Responce)
+                    {
+                        Responce = state.Sb;
+                    }
 
                     client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
                         ReceiveCallback, state);
@@ -94,26 +134,31 @@ namespace Labyrinth.Services
                 {
                     if (state.Sb.Length > 1)
                     {
-                        _responce = state.Sb.ToString();
+                        lock (Responce)
+                        {
+                            Responce = state.Sb;
+                        }
                     }
                     ReceiveDone.Set();
+                    Thread.Sleep(10);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                IsBroken = true;
+                ExceptionLogger.ExceptionLogger.AddException(e.Message);
             }
         }
 
-        private static void Send(Socket client, String data)
+        public void Send(string data)
         {
             byte[] byteData = Encoding.Unicode.GetBytes(data);
 
-            client.BeginSend(byteData, 0, byteData.Length, 0,
-                SendCallback, client);
+            _client.BeginSend(byteData, 0, byteData.Length, 0,
+                SendCallback, _client);
         }
 
-        private static void SendCallback(IAsyncResult ar)
+        private void SendCallback(IAsyncResult ar)
         {
             try
             {
@@ -129,16 +174,41 @@ namespace Labyrinth.Services
                 Console.WriteLine(e.ToString());
             }
         }
+
+        public bool CheckConnection()
+        {
+            try
+            {
+                return _client.Connected;
+            }
+            catch (Exception e)
+            {
+                ExceptionLogger.ExceptionLogger.AddException(e.Message);
+                return false;
+            }
+        }
+
+        public string GetMessage()
+        {
+            var str = Responce.ToString();
+            lock (Responce)
+            {
+                Responce.Clear();
+            }
+
+            return str;
+        }
+
     }
 
     public class StateObject
     {
         public Socket WorkSocket;
 
-        public const int BufferSize = 256;
+        public const int BufferSize = 2048;
 
         public byte[] Buffer = new byte[BufferSize];
 
         public StringBuilder Sb = new StringBuilder();
     }
-}   
+}

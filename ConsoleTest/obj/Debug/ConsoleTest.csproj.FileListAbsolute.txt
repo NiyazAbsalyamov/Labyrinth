@@ -1,0 +1,7 @@
+D:\Repos\Labyrinth\ConsoleTest\bin\Debug\ConsoleTest.exe
+D:\Repos\Labyrinth\ConsoleTest\bin\Debug\ConsoleTest.pdb
+D:\Repos\Labyrinth\ConsoleTest\bin\Debug\Labyrinth.exe
+D:\Repos\Labyrinth\ConsoleTest\bin\Debug\Labyrinth.pdb
+D:\Repos\Labyrinth\ConsoleTest\obj\Debug\ConsoleTest.csprojResolveAssemblyReference.cache
+D:\Repos\Labyrinth\ConsoleTest\obj\Debug\ConsoleTest.exe
+D:\Repos\Labyrinth\ConsoleTest\obj\Debug\ConsoleTest.pdb
