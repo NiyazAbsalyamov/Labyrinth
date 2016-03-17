@@ -96,6 +96,7 @@ namespace Labyrinth.Services
         {
             try
             {
+                Responce = new StringBuilder();
                 var state = new StateObject { WorkSocket = _client };
 
                 _client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
@@ -129,6 +130,9 @@ namespace Labyrinth.Services
 
                     client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
                         ReceiveCallback, state);
+
+                    if (Responce.Length > 0)
+                        ReceiveDone.Set();
                 }
                 else
                 {
